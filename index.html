@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Make 10 Puzzle - はめこみ算数パズル</title>
+    <title>Make 10 Puzzle</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
@@ -16,11 +16,9 @@
             user-select: none;
             display: flex;
             flex-direction: column;
-            /* iPhoneのツールバー対策: svhを優先 */
             height: 100vh;
             height: 100svh;
             width: 100vw;
-            /* 画面全体の余白をセーフエリアに合わせる */
             padding-top: env(safe-area-inset-top);
         }
 
@@ -30,6 +28,9 @@
             max-width: 500px;
             margin: 0 auto;
             padding: 5px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
         }
 
         .main-game-area {
@@ -44,26 +45,22 @@
         }
 
         .game-container {
-            /* 盤面の高さをさらに少し抑えて、ボタンのためのスペースを確保 */
-            height: 85%;
+            height: 80%;
             max-height: 400px; 
             aspect-ratio: 6/10;
             position: relative;
-            overflow: visible;
         }
 
         .game-grid {
-            display: block; 
             background-color: #f1f5f9;
             background-image: linear-gradient(#e2e8f0 1px, transparent 1px);
-            background-size: 100% calc(100% / 10); 
+            background-size: 100% 10%; 
             border: 6px solid #475569;
             border-top: none;
             border-radius: 0 0 20px 20px;
             width: 100%;
             height: 100%;
             position: relative;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
 
         #spawnGuide {
@@ -81,25 +78,17 @@
             border: 3px solid rgba(255,255,255,0.5);
             border-radius: 12px;
             display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
+            justify-content: center;
+            align-items: flex-end;
             padding-bottom: 4px; 
             font-weight: 700;
-            font-size: clamp(1.2rem, 3.5vh, 2rem);
+            font-size: 1.5rem;
             color: white;
             box-sizing: border-box;
             box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2);
             z-index: 10;
         }
 
-        .block.falling {
-            z-index: 30;
-            filter: brightness(1.1);
-            border: 3px solid white;
-        }
-
-        /* 数字ごとの色 */
         .num-1 { background-color: #ef4444; } .num-2 { background-color: #f97316; }
         .num-3 { background-color: #f59e0b; } .num-4 { background-color: #10b981; }
         .num-5 { background-color: #06b6d4; } .num-6 { background-color: #3b82f6; }
@@ -113,10 +102,8 @@
             display: grid;
             grid-template-columns: 1fr 1.3fr 1fr;
             gap: 10px;
-            /* iPhoneのホームバーに絶対に被らないよう、下部余白をさらに増量 */
-            padding: 10px 15px calc(30px + env(safe-area-inset-bottom));
+            padding: 10px 15px calc(40px + env(safe-area-inset-bottom));
             margin: 0 auto;
-            background: #f8fafc;
         }
 
         .action-btn {
@@ -130,6 +117,7 @@
             align-items: center;
             justify-content: center;
             color: #475569;
+            font-weight: bold;
         }
 
         .action-btn:active {
@@ -137,44 +125,35 @@
             box-shadow: 0 2px 0 #cbd5e1;
         }
 
-        .drop-btn {
-            background-color: #eff6ff;
-            border-color: #bfdbfe;
-            box-shadow: 0 5px 0 #93c5fd;
-            color: #2563eb;
-        }
+        .drop-btn { background-color: #eff6ff; color: #2563eb; border-color: #bfdbfe; box-shadow: 0 5px 0 #93c5fd; }
 
-        /* 演出系 */
-        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(0); opacity: 0; } }
-        .popping { animation: pop 0.4s ease-out forwards; z-index: 50; }
+        .next-box { position: absolute; left: -55px; top: 0; text-align: center; }
+        .next-preview { width: 40px; height: 60px; background: white; border: 2px solid #e2e8f0; border-radius: 8px; display: flex; align-items: flex-end; overflow: hidden; }
         
-        .score-float { position: absolute; color: #f59e0b; font-weight: bold; font-size: 4rem; pointer-events: none; animation: scoreFloat 1.2s forwards; z-index: 100; text-shadow: 3px 3px 0 #fff; }
-        @keyframes scoreFloat { 0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, -100px); opacity: 0; } }
+        @keyframes pop { 0% { transform: scale(1); } 100% { transform: scale(0); opacity: 0; } }
+        .popping { animation: pop 0.3s forwards; }
 
-        .next-box { position: absolute; left: -60px; top: 0; display: flex; flex-direction: column; align-items: center; }
-        .next-preview-container { width: 45px; height: 70px; background: white; border: 2px solid #e2e8f0; border-radius: 10px; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
-        
-        .mode-btn { @apply w-full py-5 px-6 rounded-3xl text-2xl font-bold shadow-md active:scale-95; }
+        #overlay { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); }
     </style>
 </head>
 <body>
 
-    <header class="flex justify-between items-end">
+    <header>
         <div>
-            <h1 class="text-xl font-bold text-slate-700 leading-none">はめこみ 10 パズル</h1>
-            <p id="modeNameDisplay" class="text-[10px] text-indigo-500 font-bold mt-1">モードをえらんでね</p>
+            <h1 class="text-xl font-bold text-slate-700">10パズル</h1>
+            <p id="modeNameDisplay" class="text-[10px] font-bold text-indigo-500">モードをえらんでね</p>
         </div>
         <div class="text-right">
             <span class="text-[10px] font-bold text-slate-400 block">スコア</span>
-            <div id="scoreDisplay" class="text-3xl font-bold text-indigo-600 leading-none">0</div>
+            <div id="scoreDisplay" class="text-3xl font-bold text-indigo-600">0</div>
         </div>
     </header>
 
     <div class="main-game-area">
         <div class="game-container">
             <div class="next-box">
-                <span class="text-[10px] font-bold text-slate-500 mb-1">つぎ</span>
-                <div id="nextPreview" class="next-preview-container"></div>
+                <span class="text-[10px] font-bold text-slate-500">つぎ</span>
+                <div id="nextPreview" class="next-preview"></div>
             </div>
             <div id="grid" class="game-grid">
                 <div id="spawnGuide"></div>
@@ -184,30 +163,21 @@
     </div>
 
     <div class="action-pad">
-        <button id="btnLeft" class="action-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            <span class="text-[10px] font-bold">ひだり</span>
-        </button>
-        <button id="btnDrop" class="action-btn drop-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-            <span class="text-[10px] font-bold">おく</span>
-        </button>
-        <button id="btnRight" class="action-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            <span class="text-[10px] font-bold">みぎ</span>
-        </button>
+        <button id="btnLeft" class="action-btn">◀<span class="text-[10px]">ひだり</span></button>
+        <button id="btnDrop" class="action-btn drop-btn">▼<span class="text-[10px]">おとす</span></button>
+        <button id="btnRight" class="action-btn">▶<span class="text-[10px]">みぎ</span></button>
     </div>
 
-    <div id="overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-        <div class="bg-white p-8 rounded-[40px] shadow-2xl text-center max-w-md w-full">
-            <h2 id="modalTitle" class="text-3xl font-bold text-slate-800 mb-4">あそびかた</h2>
-            <p id="modalDesc" class="text-base text-slate-500 mb-8">たてに ならべて<br><span class="text-indigo-600 font-bold text-xl">ぴったり 10</span> にしよう！</p>
-            <div id="modeSelection" class="space-y-4">
-                <button id="easyBtn" class="mode-btn bg-green-500 text-white border-b-8 border-green-700">かんたん</button>
-                <button id="hardBtn" class="mode-btn bg-indigo-600 text-white border-b-8 border-indigo-800">むずかしい</button>
+    <div id="overlay" class="fixed inset-0 z-50 flex items-center justify-center p-6">
+        <div class="bg-white p-8 rounded-[40px] shadow-2xl text-center w-full max-w-sm">
+            <h2 id="modalTitle" class="text-3xl font-bold mb-4 text-slate-800">あそびかた</h2>
+            <p id="modalDesc" class="text-slate-500 mb-8">たてに ならべて<br><span class="text-indigo-600 font-bold text-xl">ぴったり 10</span> にしよう！</p>
+            <div id="modeSelection" class="flex flex-col gap-4">
+                <button id="easyBtn" class="py-5 bg-green-500 text-white rounded-2xl text-2xl font-bold shadow-lg border-b-8 border-green-700 active:transform active:scale-95">かんたん</button>
+                <button id="hardBtn" class="py-5 bg-indigo-600 text-white rounded-2xl text-2xl font-bold shadow-lg border-b-8 border-indigo-800 active:transform active:scale-95">むずかしい</button>
             </div>
-            <p id="finalScore" class="hidden text-5xl font-bold text-indigo-600 my-8"></p>
-            <button id="restartBtn" class="hidden w-full bg-slate-700 text-white font-bold py-5 rounded-[30px] text-2xl shadow-lg">もういちど</button>
+            <p id="finalScore" class="hidden text-4xl font-bold text-indigo-600 my-6"></p>
+            <button id="restartBtn" class="hidden w-full py-5 bg-slate-700 text-white rounded-2xl text-2xl font-bold">もういちど</button>
         </div>
     </div>
 
@@ -222,23 +192,139 @@
         const nextEl = document.getElementById('nextPreview');
         const modeDisplay = document.getElementById('modeNameDisplay');
         const overlay = document.getElementById('overlay');
-        const restartBtn = document.getElementById('restartBtn');
 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(f, d, t='sine', v=0.05) { try { const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type=t; o.connect(g); g.connect(audioCtx.destination); o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(v, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+d); o.start(); o.stop(audioCtx.currentTime+d); } catch(e){} }
+        // 音声の初期化（ユーザー操作で開始する必要あり）
+        let audioCtx = null;
+        function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        function playSound(f, d) { if(!audioCtx) return; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type='sine'; o.connect(g); g.connect(audioCtx.destination); o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(0.05, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+d); o.start(); o.stop(audioCtx.currentTime+d); }
 
         function getNextValue() {
             if (!isEasyMode) return Math.floor(Math.random()*9)+1;
             let targets = [];
-            for(let x=0; x<COLS; x++) { let h=getColHeight(x); if(h>0 && h<10) targets.push(10-h); }
-            return (targets.length>0 && Math.random()<0.7) ? targets[Math.floor(Math.random()*targets.length)] : Math.floor(Math.random()*9)+1;
+            for(let x=0; x<COLS; x++) {
+                let s = grid[x].reduce((a, b) => a + b.value, 0);
+                if(s > 0 && s < 10) targets.push(10 - s);
+            }
+            return (targets.length > 0 && Math.random() < 0.7) ? targets[Math.floor(Math.random()*targets.length)] : Math.floor(Math.random()*9)+1;
         }
 
-        function updateNextPreview() {
-            nextEl.innerHTML = `<div class="w-full num-${nextValue}" style="height:${nextValue*10}%; border-radius:4px; border:1px solid rgba(255,255,255,0.3);"></div>`;
+        function updateNext() {
+            nextEl.innerHTML = `<div class="w-full num-${nextValue}" style="height:${nextValue*10}%;"></div>`;
         }
 
-        function initGame(easy) {
+        function startGame(easy) {
+            initAudio();
             isEasyMode = easy;
+            isGameOver = false;
+            score = 0;
+            scoreEl.textContent = '0';
+            grid = Array.from({length: COLS}, () => []);
+            gridEl.innerHTML = '';
+            gridEl.appendChild(spawnGuide);
+            overlay.classList.add('hidden');
             modeDisplay.textContent = isEasyMode ? "モード：かんたん" : "モード：むずかしい";
-            grid = Array.from({length:COLS}, () => []);
+            nextValue = getNextValue();
+            spawnBlock();
+        }
+
+        function spawnBlock() {
+            if (isGameOver) return;
+            const val = nextValue; nextValue = getNextValue(); updateNext();
+            currentBlock = { x: 2, value: val, element: document.createElement('div') };
+            currentBlock.element.className = `block num-${val}`;
+            currentBlock.element.style.width = (100/COLS) + '%';
+            currentBlock.element.style.height = (val*10) + '%';
+            currentBlock.element.innerHTML = val;
+            gridEl.appendChild(currentBlock.element);
+            updateView();
+        }
+
+        function updateView() {
+            if (!currentBlock) return;
+            currentBlock.element.style.left = (currentBlock.x * (100/COLS)) + '%';
+            currentBlock.element.style.top = '-5%';
+            spawnGuide.style.width = (100/COLS) + '%';
+            spawnGuide.style.left = (currentBlock.x * (100/COLS)) + '%';
+        }
+
+        function move(d) {
+            if (!currentBlock || isProcessing) return;
+            const nx = currentBlock.x + d;
+            if (nx >= 0 && nx < COLS) { currentBlock.x = nx; updateView(); playSound(600, 0.1); }
+        }
+
+        function drop() {
+            if (!currentBlock || isProcessing) return;
+            isProcessing = true;
+            const {x, value, element} = currentBlock;
+            const currentH = grid[x].reduce((a, b) => a + b.value, 0);
+            const targetY = ROWS - currentH - value;
+            element.style.transition = "top 0.15s ease-in";
+            element.style.top = (targetY * 10) + '%';
+            
+            setTimeout(() => {
+                grid[x].push({value, element});
+                check(x);
+            }, 160);
+        }
+
+        function check(x) {
+            let col = grid[x];
+            let sum = 0;
+            for (let i = 0; i < col.length; i++) {
+                sum = 0;
+                for (let j = i; j < col.length; j++) {
+                    sum += col[j].value;
+                    if (sum === 10) {
+                        const removed = col.splice(i, j - i + 1);
+                        removed.forEach(b => {
+                            b.element.classList.add('popping');
+                            setTimeout(() => b.element.remove(), 300);
+                        });
+                        score += removed.length * 100;
+                        scoreEl.textContent = score;
+                        playSound(800, 0.2);
+                        setTimeout(() => { reposition(x); next(); }, 300);
+                        return;
+                    }
+                }
+            }
+            if (grid[x].reduce((a,b)=>a+b.value, 0) > 10) { gameOver(); } else { next(); }
+        }
+
+        function reposition(x) {
+            let h = 0;
+            grid[x].forEach(b => {
+                h += b.value;
+                b.element.style.top = ((ROWS - h) * 10) + '%';
+            });
+        }
+
+        function next() { isProcessing = false; currentBlock = null; spawnBlock(); }
+
+        function gameOver() {
+            isGameOver = true;
+            document.getElementById('modalTitle').textContent = "ゲームオーバー";
+            document.getElementById('finalScore').textContent = "スコア: " + score;
+            document.getElementById('finalScore').classList.remove('hidden');
+            document.getElementById('restartBtn').classList.remove('hidden');
+            document.getElementById('modeSelection').classList.add('hidden');
+            overlay.classList.remove('hidden');
+        }
+
+        // ボタンイベント
+        document.getElementById('easyBtn').onclick = () => startGame(true);
+        document.getElementById('hardBtn').onclick = () => startGame(false);
+        document.getElementById('restartBtn').onclick = () => location.reload();
+
+        function bind(id, fn) {
+            const el = document.getElementById(id);
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); fn(); }, {passive: false});
+            el.addEventListener('click', (e) => { if(e.pointerType !== 'touch') fn(); });
+        }
+        bind('btnLeft', () => move(-1));
+        bind('btnRight', () => move(1));
+        bind('btnDrop', drop);
+    </script>
+</body>
+</html>
