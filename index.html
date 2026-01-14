@@ -16,10 +16,12 @@
             user-select: none;
             display: flex;
             flex-direction: column;
-            /* svh（Small Viewport Height）を使用してツールバーに隠れないようにする */
+            /* iPhoneのツールバー対策: svhを優先 */
             height: 100vh;
             height: 100svh;
             width: 100vw;
+            /* 画面全体の余白をセーフエリアに合わせる */
+            padding-top: env(safe-area-inset-top);
         }
 
         header {
@@ -27,7 +29,7 @@
             width: 100%;
             max-width: 500px;
             margin: 0 auto;
-            padding: 10px 20px;
+            padding: 5px 20px;
         }
 
         .main-game-area {
@@ -42,9 +44,9 @@
         }
 
         .game-container {
-            /* 画面全体の高さに合わせて盤面サイズを自動調整 */
-            height: 90%;
-            max-height: 480px; 
+            /* 盤面の高さをさらに少し抑えて、ボタンのためのスペースを確保 */
+            height: 85%;
+            max-height: 400px; 
             aspect-ratio: 6/10;
             position: relative;
             overflow: visible;
@@ -55,13 +57,12 @@
             background-color: #f1f5f9;
             background-image: linear-gradient(#e2e8f0 1px, transparent 1px);
             background-size: 100% calc(100% / 10); 
-            border: 8px solid #475569;
+            border: 6px solid #475569;
             border-top: none;
             border-radius: 0 0 20px 20px;
             width: 100%;
             height: 100%;
             position: relative;
-            overflow: visible; 
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
 
@@ -72,35 +73,172 @@
             background-color: rgba(99, 102, 241, 0.1);
             border-left: 2px dashed rgba(99, 102, 241, 0.3);
             border-right: 2px dashed rgba(99, 102, 241, 0.3);
-            transition: left 0.1s ease-out;
             z-index: 1;
-            pointer-events: none;
-        }
-
-        .game-grid::before {
-            content: 'DEAD LINE';
-            position: absolute;
-            top: -4px;
-            left: -8px;
-            right: -8px;
-            height: 4px;
-            background: #f43f5e;
-            z-index: 25;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #f43f5e;
-            font-size: 10px;
-            font-weight: bold;
-            letter-spacing: 2px;
         }
 
         .block {
             position: absolute;
-            border: 4px solid rgba(255,255,255,0.5);
-            border-radius: 14px;
+            border: 3px solid rgba(255,255,255,0.5);
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             align-items: center;
-            padding-bottom:
+            padding-bottom: 4px; 
+            font-weight: 700;
+            font-size: clamp(1.2rem, 3.5vh, 2rem);
+            color: white;
+            box-sizing: border-box;
+            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .block.falling {
+            z-index: 30;
+            filter: brightness(1.1);
+            border: 3px solid white;
+        }
+
+        /* 数字ごとの色 */
+        .num-1 { background-color: #ef4444; } .num-2 { background-color: #f97316; }
+        .num-3 { background-color: #f59e0b; } .num-4 { background-color: #10b981; }
+        .num-5 { background-color: #06b6d4; } .num-6 { background-color: #3b82f6; }
+        .num-7 { background-color: #6366f1; } .num-8 { background-color: #8b5cf6; }
+        .num-9 { background-color: #ec4899; }
+
+        .action-pad {
+            flex: 0 0 auto;
+            width: 100%;
+            max-width: 500px;
+            display: grid;
+            grid-template-columns: 1fr 1.3fr 1fr;
+            gap: 10px;
+            /* iPhoneのホームバーに絶対に被らないよう、下部余白をさらに増量 */
+            padding: 10px 15px calc(30px + env(safe-area-inset-bottom));
+            margin: 0 auto;
+            background: #f8fafc;
+        }
+
+        .action-btn {
+            height: 70px;
+            background: white;
+            border-radius: 18px;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 5px 0 #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #475569;
+        }
+
+        .action-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #cbd5e1;
+        }
+
+        .drop-btn {
+            background-color: #eff6ff;
+            border-color: #bfdbfe;
+            box-shadow: 0 5px 0 #93c5fd;
+            color: #2563eb;
+        }
+
+        /* 演出系 */
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(0); opacity: 0; } }
+        .popping { animation: pop 0.4s ease-out forwards; z-index: 50; }
+        
+        .score-float { position: absolute; color: #f59e0b; font-weight: bold; font-size: 4rem; pointer-events: none; animation: scoreFloat 1.2s forwards; z-index: 100; text-shadow: 3px 3px 0 #fff; }
+        @keyframes scoreFloat { 0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, -100px); opacity: 0; } }
+
+        .next-box { position: absolute; left: -60px; top: 0; display: flex; flex-direction: column; align-items: center; }
+        .next-preview-container { width: 45px; height: 70px; background: white; border: 2px solid #e2e8f0; border-radius: 10px; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
+        
+        .mode-btn { @apply w-full py-5 px-6 rounded-3xl text-2xl font-bold shadow-md active:scale-95; }
+    </style>
+</head>
+<body>
+
+    <header class="flex justify-between items-end">
+        <div>
+            <h1 class="text-xl font-bold text-slate-700 leading-none">はめこみ 10 パズル</h1>
+            <p id="modeNameDisplay" class="text-[10px] text-indigo-500 font-bold mt-1">モードをえらんでね</p>
+        </div>
+        <div class="text-right">
+            <span class="text-[10px] font-bold text-slate-400 block">スコア</span>
+            <div id="scoreDisplay" class="text-3xl font-bold text-indigo-600 leading-none">0</div>
+        </div>
+    </header>
+
+    <div class="main-game-area">
+        <div class="game-container">
+            <div class="next-box">
+                <span class="text-[10px] font-bold text-slate-500 mb-1">つぎ</span>
+                <div id="nextPreview" class="next-preview-container"></div>
+            </div>
+            <div id="grid" class="game-grid">
+                <div id="spawnGuide"></div>
+            </div>
+            <div id="effectsContainer" class="absolute inset-0 pointer-events-none"></div>
+        </div>
+    </div>
+
+    <div class="action-pad">
+        <button id="btnLeft" class="action-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            <span class="text-[10px] font-bold">ひだり</span>
+        </button>
+        <button id="btnDrop" class="action-btn drop-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            <span class="text-[10px] font-bold">おく</span>
+        </button>
+        <button id="btnRight" class="action-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            <span class="text-[10px] font-bold">みぎ</span>
+        </button>
+    </div>
+
+    <div id="overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white p-8 rounded-[40px] shadow-2xl text-center max-w-md w-full">
+            <h2 id="modalTitle" class="text-3xl font-bold text-slate-800 mb-4">あそびかた</h2>
+            <p id="modalDesc" class="text-base text-slate-500 mb-8">たてに ならべて<br><span class="text-indigo-600 font-bold text-xl">ぴったり 10</span> にしよう！</p>
+            <div id="modeSelection" class="space-y-4">
+                <button id="easyBtn" class="mode-btn bg-green-500 text-white border-b-8 border-green-700">かんたん</button>
+                <button id="hardBtn" class="mode-btn bg-indigo-600 text-white border-b-8 border-indigo-800">むずかしい</button>
+            </div>
+            <p id="finalScore" class="hidden text-5xl font-bold text-indigo-600 my-8"></p>
+            <button id="restartBtn" class="hidden w-full bg-slate-700 text-white font-bold py-5 rounded-[30px] text-2xl shadow-lg">もういちど</button>
+        </div>
+    </div>
+
+    <script>
+        const COLS = 6; const ROWS = 10;
+        let grid = []; let currentBlock = null; let nextValue = 5; let score = 0;
+        let isGameOver = false; let isEasyMode = true; let isProcessing = false;
+
+        const gridEl = document.getElementById('grid');
+        const spawnGuide = document.getElementById('spawnGuide');
+        const scoreEl = document.getElementById('scoreDisplay');
+        const nextEl = document.getElementById('nextPreview');
+        const modeDisplay = document.getElementById('modeNameDisplay');
+        const overlay = document.getElementById('overlay');
+        const restartBtn = document.getElementById('restartBtn');
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(f, d, t='sine', v=0.05) { try { const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type=t; o.connect(g); g.connect(audioCtx.destination); o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(v, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+d); o.start(); o.stop(audioCtx.currentTime+d); } catch(e){} }
+
+        function getNextValue() {
+            if (!isEasyMode) return Math.floor(Math.random()*9)+1;
+            let targets = [];
+            for(let x=0; x<COLS; x++) { let h=getColHeight(x); if(h>0 && h<10) targets.push(10-h); }
+            return (targets.length>0 && Math.random()<0.7) ? targets[Math.floor(Math.random()*targets.length)] : Math.floor(Math.random()*9)+1;
+        }
+
+        function updateNextPreview() {
+            nextEl.innerHTML = `<div class="w-full num-${nextValue}" style="height:${nextValue*10}%; border-radius:4px; border:1px solid rgba(255,255,255,0.3);"></div>`;
+        }
+
+        function initGame(easy) {
+            isEasyMode = easy;
+            modeDisplay.textContent = isEasyMode ? "モード：かんたん" : "モード：むずかしい";
+            grid = Array.from({length:COLS}, () => []);
